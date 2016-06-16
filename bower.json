@@ -1,0 +1,14 @@
+{
+  "name": "fx-history-clusters",
+  "authors": [
+    "Grigory Kruglov <grigory@kruglov.ca>"
+  ],
+  "description": "",
+  "main": "index.html",
+  "license": "GPLv3",
+  "homepage": "",
+  "dependencies": {
+    "jquery": "^3.0.0",
+    "underscore": "^1.8.3"
+  }
+}
