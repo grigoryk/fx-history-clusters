@@ -1,10 +1,13 @@
 <body>
+    <strong>Experimental history clusterer. Please open console.</strong>
     <form id="fetchHistory">
+        <p>Fx Account Credentials. eghm, not for safe keeping ;)</p>
         <input type="text" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
         <button type="submit">Load History</button>
     </form>
 
+    <p><u>Clustering parameters</u></p>
     <label for="historyLimit"># of most recent history items to cluster</label>
     <input type="text" name="historyLimit" id="historyLimit" placeholder="300">
     <br>
@@ -19,9 +22,11 @@
     <input type="radio" name="clusterBy" value="title" id="clusterByTitle" checked><label for="clusterByTitle">Page Title</label>
     <input type="radio" name="clusterBy" value="time" id="clusterByTime"><label for="clusterByTime">Time of Visit</label>
 
-    <br><br>
-
+    <p><u>After changing any of the above, press this:</u></p>
     <button id="computeWordMatrix">Compute Word Matrix</button>
+
+    <br><br>
+    <p><u>Let's go, pick one already:</u></p>
     <button id="doHierarchicalCluster">Print hierarchical clusters</button>
     <button id="doKMeans">Print k-means clusters</button>
 

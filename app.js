@@ -5,6 +5,7 @@ let globals = {
 };
 
 let fetchHistory = function (email, password) {
+    $("#results").html("<strong>Loading history... Hold on!</strong>");
     $.post("https://fennec-history-proxy.herokuapp.com/history", {
         email: email,
         password: password,
@@ -12,10 +13,11 @@ let fetchHistory = function (email, password) {
 
     }).done(function (results) {
         window.localStorage["history"] = JSON.stringify(results);
+        $("#results").html("<strong>History loaded, proceed!</strong>");
 
     }).fail(function (res) {
         console.log(res.responseJSON.error);
-        alert(res.responseJSON.error.message);
+        $("#results").html("<strong>Error loading history, one of us screwed up: " + res.responseJSON.error.message + "</strong>");
 
     }).always(function () {});
 };
@@ -125,16 +127,18 @@ let computeWordMatrix = function (historyList, historyLimit) {
 };
 
 let printKMeansClusters = function (clusters, labels) {
+    let str = "";
     _.each(clusters, function (cluster, i) {
-        console.log("CLUSTER #" + i);
-        console.log("------");
+        str += "<strong>CLUSTER #" + i + "</strong>";
+        str += "<ul>";
 
         _.each(cluster, function (itemId) {
-            console.log(labels[itemId])
+            str += "<li>" + labels[itemId] + "</li>";
         });
 
-        console.log("");
+        str += "</ul>";
     });
+    $("#results").html(str);
 };
 
 let printHierarchicalCluster = function (cluster, labels, n) {
