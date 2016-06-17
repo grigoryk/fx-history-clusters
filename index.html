@@ -10,12 +10,22 @@
     <br>
     <label for="kMeans"># of clusters to discover (k-means)</label>
     <input type="text" name="kMeans" id="kMeans" placeholder="5">
+    <br>
+    <label for="numberOfVisits"># of last visits to consider (for time-based clustering)</label>
+    <input type="text" name="numberOfVisits" id="numberOfVisits" placeholder="3">
+    <br>
+    <label>Cluster by:</label>
+    <input type="radio" name="clusterBy" value="combined" id="clusterByCombined"><label for="clusterByCombined">Combined</label>
+    <input type="radio" name="clusterBy" value="title" id="clusterByTitle" checked><label for="clusterByTitle">Page Title</label>
+    <input type="radio" name="clusterBy" value="time" id="clusterByTime"><label for="clusterByTime">Time of Visit</label>
 
     <br><br>
 
     <button id="computeWordMatrix">Compute Word Matrix</button>
     <button id="doHierarchicalCluster">Print hierarchical clusters</button>
     <button id="doKMeans">Print k-means clusters</button>
+
+    <div style="margin-top: 20px;" id="results"></div>
 
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/underscore/underscore.js"></script>

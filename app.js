@@ -20,22 +20,76 @@ let fetchHistory = function (email, password) {
     }).always(function () {});
 };
 
-let computeWordMatrixFromCached = function (historyLimit) {
-    globals.wordMatrix = computeWordMatrix(
-        JSON.parse(window.localStorage["history"]),
-        historyLimit
-    );
+let computeWordMatrixFromCached = function (historyLimit, clusterBy, numberOfVisits) {
+    if (clusterBy === "title") {
+        globals.wordMatrix = computeWordMatrix(
+            JSON.parse(window.localStorage["history"]),
+            historyLimit
+        );
+    } else if (clusterBy === "time") {
+        globals.wordMatrix = computeWordMatrixTime(
+            JSON.parse(window.localStorage["history"]),
+            historyLimit, numberOfVisits
+        );
+    } else if (clusterBy === "combined") {
+        globals.wordMatrix = computeWordMatrixCombined(
+            JSON.parse(window.localStorage["history"]),
+            historyLimit, numberOfVisits
+        );
+    }
     console.log(globals.wordMatrix);
 };
 
 let doHierarchicalCluster = function (wordMatrix) {
     let rootCluster = hierarchicalCluster(wordMatrix, pearson);
+    $("#results").html("");
     printHierarchicalCluster(rootCluster, _.keys(wordMatrix), 0);
 };
 
 let doKMeans = function (wordMatrix, k) {
     let clusters = kMeansCluster(wordMatrix, pearson, k);
+    $("#results").html("");
     printKMeansClusters(clusters, _.keys(wordMatrix));
+};
+
+let computeWordMatrixTime = function (historyList, historyLimit, numberOfVisits) {
+    let wordMatrix = {};
+
+    _.each(_.first(historyList, historyLimit), function (item) {
+        let key = item.title || item.histUri;
+        wordMatrix[key] = [];
+        _.each(_.range(numberOfVisits), function (v) {
+            if (item.visits[v]) {
+                wordMatrix[key].push(item.visits[v].date);
+            } else {
+                wordMatrix[key].push(0);
+            }
+        });
+    });
+
+    return wordMatrix;
+};
+
+let computeWordMatrixCombined = function (historyList, historyLimit, numberOfVisits) {
+    let wordMatrix = computeWordMatrix(historyList, historyLimit);
+
+    _.each(_.first(historyList, historyLimit), function (item) {
+        let key = item.title;
+
+        if (!key) {
+            return;
+        }
+
+        _.each(_.range(numberOfVisits), function (v) {
+            if (item.visits[v]) {
+                wordMatrix[key].push(item.visits[v].date);
+            } else {
+                wordMatrix[key].push(0);
+            }
+        });
+    });
+
+    return wordMatrix;
 };
 
 let computeWordMatrix = function (historyList, historyLimit) {
@@ -86,15 +140,15 @@ let printKMeansClusters = function (clusters, labels) {
 let printHierarchicalCluster = function (cluster, labels, n) {
     let str = "";
     for (let i = 0; i < n; i++) {
-        str += " ";
+        str += "&nbsp;&nbsp;&nbsp;";
     }
     if (cluster.id < 0) {
-        str += "-";
+        str += "";
     } else {
         str += labels[cluster.id] || cluster.id;
     }
 
-    console.log(str);
+    $("#results").html($("#results").html() + str + "<br>");
 
     if (cluster.left !== null) {
         printHierarchicalCluster(cluster.left, labels, n + 1);
@@ -317,14 +371,20 @@ let getWords = function (phrase) {
 };
 
 $("#computeWordMatrix").click(function () {
-    computeWordMatrixFromCached(document.getElementById("historyLimit").value);
+    computeWordMatrixFromCached(
+        document.getElementById("historyLimit").value,
+        $("[type=radio]:checked")[0].value,
+        document.getElementById("numberOfVisits").value
+    );
 });
 
 $("#doHierarchicalCluster").click(function () {
+    $("#results").html("Loading...");
     doHierarchicalCluster(globals.wordMatrix);
 });
 
 $("#doKMeans").click(function () {
+    $("#results").html("Loading...");
     doKMeans(globals.wordMatrix, document.getElementById("kMeans").value);
 });
 
