@@ -1,5 +1,5 @@
 <body>
-    <strong>Experimental history clusterer. Please open console.</strong>
+    <strong>Experimental history clusterer. Source on GitHub: <a href="https://github.com/grigoryk/fx-history-clusters">grigoryk/fx-history-clusters</a>.</strong>
     <form id="fetchHistory">
         <p>Fx Account Credentials. eghm, not for safe keeping ;)</p>
         <input type="text" id="email" placeholder="Email">
@@ -9,24 +9,21 @@
 
     <p><u>Clustering parameters</u></p>
     <label for="historyLimit"># of most recent history items to cluster</label>
-    <input type="text" name="historyLimit" id="historyLimit" placeholder="300">
+    <input type="text" name="historyLimit" id="historyLimit" value="50">
     <br>
     <label for="kMeans"># of clusters to discover (k-means)</label>
-    <input type="text" name="kMeans" id="kMeans" placeholder="5">
+    <input type="text" name="kMeans" id="kMeans" value="5">
     <br>
     <label for="numberOfVisits"># of last visits to consider (for time-based clustering)</label>
-    <input type="text" name="numberOfVisits" id="numberOfVisits" placeholder="3">
+    <input type="text" name="numberOfVisits" id="numberOfVisits" value="2">
     <br>
     <label>Cluster by:</label>
     <input type="radio" name="clusterBy" value="combined" id="clusterByCombined"><label for="clusterByCombined">Combined</label>
     <input type="radio" name="clusterBy" value="title" id="clusterByTitle" checked><label for="clusterByTitle">Page Title</label>
     <input type="radio" name="clusterBy" value="time" id="clusterByTime"><label for="clusterByTime">Time of Visit</label>
 
-    <p><u>After changing any of the above, press this:</u></p>
-    <button id="computeWordMatrix">Compute Word Matrix</button>
-
     <br><br>
-    <p><u>Let's go, pick one already:</u></p>
+    <p><u>Let's go, pick one already (this will be slow for a lot of items)</u></p>
     <button id="doHierarchicalCluster">Print hierarchical clusters</button>
     <button id="doKMeans">Print k-means clusters</button>
 

@@ -374,21 +374,32 @@ let getWords = function (phrase) {
     return phrase.split(/[^A-Z^a-z^watch]+/);
 };
 
-$("#computeWordMatrix").click(function () {
+let doRefreshMatrix = function () {
     computeWordMatrixFromCached(
         document.getElementById("historyLimit").value,
         $("[type=radio]:checked")[0].value,
         document.getElementById("numberOfVisits").value
     );
-});
+}
+
+let checkHistoryPresent = function () {
+    if (window.localStorage["history"]) {
+        return true;
+    }
+    alert("No history to cluster! Please load history.");
+    return false;
+}
 
 $("#doHierarchicalCluster").click(function () {
-    $("#results").html("Loading...");
+    if (!checkHistoryPresent()) return;
+    doRefreshMatrix();
     doHierarchicalCluster(globals.wordMatrix);
 });
 
 $("#doKMeans").click(function () {
-    $("#results").html("Loading...");
+    if (!checkHistoryPresent()) return;
+    checkHistoryPresent();
+    doRefreshMatrix();
     doKMeans(globals.wordMatrix, document.getElementById("kMeans").value);
 });
 
