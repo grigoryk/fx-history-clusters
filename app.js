@@ -1,10 +1,14 @@
-let HISTORY_LIMIT = 20000;
+let HISTORY_FETCH_LIMIT = 20000;
+
+let globals = {
+    wordMatrix: {}
+};
 
 let fetchHistory = function (email, password) {
     $.post("https://fennec-history-proxy.herokuapp.com/history", {
         email: email,
         password: password,
-        limit: HISTORY_LIMIT
+        limit: HISTORY_FETCH_LIMIT
 
     }).done(function (results) {
         window.localStorage["history"] = JSON.stringify(results);
@@ -16,16 +20,28 @@ let fetchHistory = function (email, password) {
     }).always(function () {});
 };
 
-let processFetchedHistory = function () {
-    processHistory(
-        JSON.parse(window.localStorage["history"])
+let computeWordMatrixFromCached = function (historyLimit) {
+    globals.wordMatrix = computeWordMatrix(
+        JSON.parse(window.localStorage["history"]),
+        historyLimit
     );
-}
+    console.log(globals.wordMatrix);
+};
 
-let processHistory = function (historyList) {
+let doHierarchicalCluster = function (wordMatrix) {
+    let rootCluster = hierarchicalCluster(wordMatrix, pearson);
+    printHierarchicalCluster(rootCluster, _.keys(wordMatrix), 0);
+};
+
+let doKMeans = function (wordMatrix, k) {
+    let clusters = kMeansCluster(wordMatrix, pearson, k);
+    printKMeansClusters(clusters, _.keys(wordMatrix));
+};
+
+let computeWordMatrix = function (historyList, historyLimit) {
     let rows = {};
 
-    _.each(_.first(historyList, 300), function (item) {
+    _.each(_.first(historyList, historyLimit), function (item) {
         if (item.title === null || item.title === undefined) {
             return;
         }
@@ -51,9 +67,20 @@ let processHistory = function (historyList) {
             return wc[word];
         });
     });
+    return wordMatrix;
+};
 
-    let rootCluster = hierarchicalCluster(wordMatrix, pearson);
-    printHierarchicalCluster(rootCluster, _.keys(wordMatrix), 0);
+let printKMeansClusters = function (clusters, labels) {
+    _.each(clusters, function (cluster, i) {
+        console.log("CLUSTER #" + i);
+        console.log("------");
+
+        _.each(cluster, function (itemId) {
+            console.log(labels[itemId])
+        });
+
+        console.log("");
+    });
 };
 
 let printHierarchicalCluster = function (cluster, labels, n) {
@@ -75,6 +102,99 @@ let printHierarchicalCluster = function (cluster, labels, n) {
     if (cluster.right !== null) {
         printHierarchicalCluster(cluster.right, labels, n + 1);
     }
+};
+
+let kMeansCluster = function (wordMatrix, distanceFn, k) {
+    let maxIterations = 100;
+
+    let columns = _.keys(wordMatrix).length;
+    let minMaxValuesOfColumns = [];
+    for (let col = 0; col < columns; col++) {
+        let column = _.map(wordMatrix, function (row) {
+            return row[col];
+        });
+        minMaxValuesOfColumns[col] = {
+            min: _.min(column),
+            max:_.max(column)
+        };
+    }
+
+    // randomly place k centroids
+    let centroids = _.map(_.range(k), function (k) {
+        return _.map(_.range(columns), function (col) {
+            return minMaxValuesOfColumns[col].min + Math.random() * (
+                minMaxValuesOfColumns[col].max - minMaxValuesOfColumns[col].min
+            );
+        });
+    });
+
+    let lastMatches = null;
+    for (let i = 0; i < maxIterations; i++) {
+        console.log("Iteration #" + i);
+
+        let bestMatches = _.map(_.range(k), function () {
+            return [];
+        });
+
+        // assign rows to centroids closest to them
+        let distances = {};
+
+        _.each(_.keys(wordMatrix), function (key, rowNum) {
+            let row = wordMatrix[key];
+            let bestCentroidNum = 0;
+
+            _.each(centroids, function (centroid, j) {
+                // let distanceCacheKey1 = j + "-" + rowNum;
+                let distanceCacheKey2 = bestCentroidNum + "-" + rowNum;
+
+                if (distances[distanceCacheKey2] === undefined) {
+                    distances[distanceCacheKey2] = distanceFn(centroids[bestCentroidNum], row);
+                }
+
+                // if (distances[distanceCacheKey1] === undefined) {
+                //     distances[distanceCacheKey1] = distanceFn(centroid, row);
+                // }
+
+                let minDistance = distances[distanceCacheKey2];
+                // let testDistance = distances[distanceCacheKey1];
+
+                if (distanceFn(centroid, row) < minDistance) {
+                    bestCentroidNum = j;
+                }
+            });
+
+            bestMatches[bestCentroidNum].push(rowNum);
+        });
+
+        // if centroids didn't move since previous iteration, we're done
+        if (bestMatches == lastMatches) {
+            break;
+        }
+
+        lastMatches = bestMatches;
+
+        _.each(_.range(k), function (i) {
+            if (bestMatches[i].length === 0) {
+                return;
+            }
+
+            let averages = _.map(_.range(wordMatrix[_.keys(wordMatrix)[0]].length), function () {
+                return 0;
+            });
+
+            _.each(bestMatches[i], function (rowId) {
+                _.each(_.range(wordMatrix[_.keys(wordMatrix)[rowId]].length), function (m) {
+                    averages[m] += wordMatrix[_.keys(wordMatrix)[rowId]][m];
+                });
+            });
+
+            centroids[i] = _.map(averages, function (av) {
+                return av / bestMatches[i].length;
+            });
+        });
+    }
+
+    return lastMatches;
 }
 
 let hierarchicalCluster = function (wordMatrix, distanceFn) {
@@ -196,8 +316,16 @@ let getWords = function (phrase) {
     return phrase.split(/[^A-Z^a-z^watch]+/);
 };
 
-$("#processFetchedHistory").click(function () {
-    processFetchedHistory();
+$("#computeWordMatrix").click(function () {
+    computeWordMatrixFromCached(document.getElementById("historyLimit").value);
+});
+
+$("#doHierarchicalCluster").click(function () {
+    doHierarchicalCluster(globals.wordMatrix);
+});
+
+$("#doKMeans").click(function () {
+    doKMeans(globals.wordMatrix, document.getElementById("kMeans").value);
 });
 
 $("#fetchHistory").submit(function (e) {

@@ -5,7 +5,17 @@
         <button type="submit">Load History</button>
     </form>
 
-    <button id="processFetchedHistory">Process History</button>
+    <label for="historyLimit"># of most recent history items to cluster</label>
+    <input type="text" name="historyLimit" id="historyLimit" placeholder="300">
+    <br>
+    <label for="kMeans"># of clusters to discover (k-means)</label>
+    <input type="text" name="kMeans" id="kMeans" placeholder="5">
+
+    <br><br>
+
+    <button id="computeWordMatrix">Compute Word Matrix</button>
+    <button id="doHierarchicalCluster">Print hierarchical clusters</button>
+    <button id="doKMeans">Print k-means clusters</button>
 
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/underscore/underscore.js"></script>
